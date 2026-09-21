@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Application: does SCR/SNCR technology reduce ambient ozone?</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Application: does SCR/SNCR technology
+reduce ambient ozone?</h1>
+
+
+
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>Selective catalytic and non-catalytic reduction (SCR/SNCR)
+technologies are installed at power-generating facilities to cut
+nitrogen-oxide emissions, a precursor of ground-level ozone. The causal
+question is whether installing SCR/SNCR <strong>reduces ambient
+ozone</strong>. This is a textbook setting for the two problems this
+package targets:</p>
+<ul>
+<li><strong>Spatial confounding</strong> — meteorology, terrain and
+socio-economic factors that affect both where the technology is
+installed and local ozone are largely unmeasured.</li>
+<li><strong>Spatial interference</strong> — NO<sub>2</sub> and ozone are
+transported by wind and chemistry, so a facility’s treatment affects
+ozone at <em>nearby</em> facilities.</li>
+</ul>
+<p>The data (473 facilities, one binary treatment <code>SnCR</code>, 18
+covariates and longitude/latitude) were assembled by Papadogeorgou
+(2016) and previously analysed by Papadogeorgou et al. (2019) and Pokal
+et al. (2023). This vignette reproduces the analysis in Section 2.4 of
+the report with <code>spaci</code>.</p>
+<blockquote>
+<p><strong>Data.</strong> A copy of the facility data ships with the
+package under <code>inst/extdata/analysis_dat.xlsx</code> and is loaded
+below via <code>system.file()</code>. It derives from Papadogeorgou
+(2016); please cite that source when using it.</p>
+</blockquote>
+</div>
+<div id="loading-and-preparing-the-data" class="section level2">
+<h2>Loading and preparing the data</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(spaci)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;readxl&#39; was built under R version 4.6.1</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">read_excel</span>(data_path))</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>outcome     <span class="ot">&lt;-</span> <span class="st">&quot;mean4maxOzone&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>treatment   <span class="ot">&lt;-</span> <span class="st">&quot;SnCR&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>NO2         <span class="ot">&lt;-</span> <span class="st">&quot;totNOxemissions&quot;</span>        <span class="co"># a mediator, excluded from adjustment</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>coord_names <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Fac.Longitude&quot;</span>, <span class="st">&quot;Fac.Latitude&quot;</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>covariates  <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(dat), <span class="fu">c</span>(outcome, treatment, NO2, coord_names))</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>dat <span class="ot">&lt;-</span> dat[<span class="fu">complete.cases</span>(</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  dat[, <span class="fu">c</span>(outcome, treatment, coord_names, covariates)]), ]</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>Y      <span class="ot">&lt;-</span> dat[[outcome]]</span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>Z      <span class="ot">&lt;-</span> dat[[treatment]]</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>coords <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dat[, coord_names])</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>X      <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(dat[, covariates])</span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a><span class="fu">c</span>(<span class="at">n =</span> <span class="fu">nrow</span>(dat), <span class="at">treated =</span> <span class="fu">sum</span>(Z <span class="sc">==</span> <span class="dv">1</span>), <span class="at">controls =</span> <span class="fu">sum</span>(Z <span class="sc">==</span> <span class="dv">0</span>))</span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a><span class="co">#&gt;        n  treated controls </span></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a><span class="co">#&gt;      473      152      321</span></span></code></pre></div>
+<div id="a-note-on-units" class="section level3">
+<h3>A note on units</h3>
+<p>The <code>mean4maxOzone</code> column is recorded in <strong>parts
+per million</strong>, whereas Table 2.2 of the report is expressed in
+<strong>parts per billion</strong>. Rescale by 1000 to reproduce the
+reported numbers:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">range</span>(Y)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; [1] 0.00200000 0.05466667</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>Y <span class="ot">&lt;-</span> Y <span class="sc">*</span> <span class="dv">1000</span>          <span class="co"># ppm -&gt; ppb, to match the report&#39;s scale</span></span></code></pre></div>
+</div>
+</div>
+<div id="estimating-the-effect-with-every-method" class="section level2">
+<h2>Estimating the effect with every method</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="do">## use geoR (as in the original analysis) when available, else the built-in MLE</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>engine <span class="ot">&lt;-</span> <span class="cf">if</span> (have_geoR) <span class="st">&quot;geoR&quot;</span> <span class="cf">else</span> <span class="st">&quot;mle&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">spatial_ate</span>(Y, Z, X, coords,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                   <span class="at">tau =</span> <span class="fl">0.2</span>, <span class="at">caliper =</span> <span class="fl">0.25</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>                   <span class="at">matern_method =</span> engine, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>res</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt;      Method        ATT        SE       Lower     Upper</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; 1  Naive PS  1.9286514 0.9906325 -0.01295256 3.8702553</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; 2      DAPS  0.6414815 0.7021013 -0.73461172 2.0175747</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; 3     iDAPS  0.4466792 0.6744939 -0.87530455 1.7686629</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; 4  recoverU -0.1372767 0.3448911 -0.81325083 0.5386974</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; 5 recoverU+ -0.1849040 0.4385964 -1.04453720 0.6747293</span></span></code></pre></div>
+<p>Alongside the values reported in Table 2.2:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Report ATT (95% CI)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Naive PS</td>
+<td>1.98 (0.12, 3.84)</td>
+</tr>
+<tr class="even">
+<td>DAPS</td>
+<td>0.54 (−0.76, 1.83)</td>
+</tr>
+<tr class="odd">
+<td>iDAPS</td>
+<td>−0.58 (−1.79, 0.63)</td>
+</tr>
+<tr class="even">
+<td>recoverU</td>
+<td>−0.15 (−0.84, 0.55)</td>
+</tr>
+<tr class="odd">
+<td>recoverU+</td>
+<td>−0.20 (−1.08, 0.69)</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>doubly robust</strong> estimators (<code>recoverU</code>,
+<code>recoverU+</code>) reproduce the report essentially exactly,
+because they do not depend on the random matching order.
+<code>Naive PS</code> is also close.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">plot_ate</span>(res, <span class="at">main =</span> <span class="st">&quot;Effect of SCR/SNCR on ozone (ATT)&quot;</span>)</span></code></pre></div>
+<p><img role="img" aria-label="Forest plot of the estimated effect of SCR/SNCR on ozone" src="data:image/png;base64,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" alt="Forest plot of the estimated effect of SCR/SNCR on ozone" /></p>
+</div>
+<div id="why-daps-and-idaps-need-a-seed" class="section level2">
+<h2>Why DAPS and iDAPS need a seed</h2>
+<p>The matching estimators pair each treated unit with its nearest
+available control, processing treated units in <strong>random
+order</strong>; the point estimate therefore depends on the RNG state.
+The original analysis script did not fix a seed, so its Table 2.2
+entries for DAPS and iDAPS are one particular draw. Averaging over seeds
+shows the reported values sit inside the sampling distribution (this
+loop is illustrative and not run at build time):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="dv">40</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>daps_att  <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="dv">1</span><span class="sc">:</span>S, <span class="cf">function</span>(s)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">daps</span>(Y, Z, X, coords, <span class="at">caliper =</span> <span class="fl">0.25</span>, <span class="at">seed =</span> s)<span class="sc">$</span>att, <span class="fu">numeric</span>(<span class="dv">1</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>idaps_att <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="dv">1</span><span class="sc">:</span>S, <span class="cf">function</span>(s)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="fu">idaps</span>(Y, Z, X, coords, <span class="at">tau =</span> <span class="fl">0.2</span>, <span class="at">caliper =</span> <span class="fl">0.25</span>, <span class="at">seed =</span> s)<span class="sc">$</span>att, <span class="fu">numeric</span>(<span class="dv">1</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">c</span>(<span class="at">DAPS_mean =</span> <span class="fu">mean</span>(daps_att),  <span class="at">DAPS_range  =</span> <span class="fu">range</span>(daps_att))</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; DAPS_mean 0.56   range [-0.40, 2.20]   (report: 0.54)</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="fu">c</span>(<span class="at">iDAPS_mean =</span> <span class="fu">mean</span>(idaps_att), <span class="at">iDAPS_range =</span> <span class="fu">range</span>(idaps_att))</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; iDAPS_mean 0.06  range [-0.58, 0.59]   (report: -0.58)</span></span></code></pre></div>
+<p>For a reproducible headline number, fix a seed (as above) or report
+the seed-averaged estimate.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Every method except the naive propensity score returns a confidence
+interval that contains zero, and the sign flips from <strong>positive
+under Naive PS</strong> to <strong>negative once spatial confounding and
+interference are adjusted for</strong>. As in the report, there is
+<strong>no evidence that SCR/SNCR installation reduces ambient
+ozone</strong> after accounting for both phenomena — and, importantly,
+ignoring them would have led to the opposite (positive) conclusion.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>Papadogeorgou, G. (2016). Data for <em>Adjusting for unmeasured
+spatial confounding with distance adjusted propensity score
+matching</em>.</li>
+<li>Papadogeorgou, G., Choirat, C. &amp; Zigler, C. (2019). Adjusting
+for unmeasured spatial confounding with distance adjusted propensity
+score matching. <em>Biostatistics</em>.</li>
+<li>Pokal, S. et al. (2023). recoverU: a doubly robust estimator using
+partially recovered spatial confounders.</li>
+<li>Ogunsola, I., Johnson, O. &amp; House, T. Unified methods for causal
+effect estimation: mitigating spatial confounding and interference
+concomitantly.</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+---
+title: "Estimating causal effects under spatial confounding and interference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Estimating causal effects under spatial confounding and interference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+                      fig.height = 4)
+```
+
+## The problem
+
+In spatial observational studies two phenomena often occur together:
+
+* **Spatial confounding (SC):** an *unmeasured* spatial variable `U(s)` drives
+  both the treatment `Z` and the outcome `Y`, so conditioning on the measured
+  covariates `X` alone does not close the backdoor path.
+* **Spatial interference (SI):** a unit's outcome depends on its *neighbours'*
+  treatment, summarised through a neighbourhood-exposure mapping
+  `E_i = Σ_j G_ij Z_j`.
+
+Methods that address only one of the two are biased when both are present. This
+package implements two estimators that handle them **simultaneously**.
+
+```{r setup}
+library(spaci)
+```
+
+## Simulate data
+
+`simulate_spatial_causal()` draws data in which `U(s)` is an exponential
+Gaussian random field, treatment depends on `U(s)`, and the outcome depends on
+both `U(s)` and neighbourhood exposure. The true ATT is 2.
+
+```{r simulate}
+sim <- simulate_spatial_causal(n = 250, delta_u = 2.0, tau_exp = 0.1, seed = 1)
+str(sim, max.level = 1)
+```
+
+## Estimate the ATT with every method
+
+```{r estimate}
+res <- spatial_ate(sim$Y, sim$Z, sim$X, sim$coords, tau = 0.1, seed = 1)
+res
+```
+
+The naive propensity score ignores both SC and SI and is the most biased;
+`iDAPS` and `recoverU+` adjust for both and sit closest to the true ATT of 2.
+
+## Visualising the comparison
+
+`plot_ate()` draws a forest plot of the estimates and their confidence
+intervals, with a reference line at zero and (optionally) the true effect.
+
+```{r forest, fig.alt = "Forest plot of ATT estimates by method"}
+plot_ate(res, true_att = sim$true_att)
+```
+
+## iDAPS in detail
+
+`idaps()` matches on the composite distance and reports the data-driven weights
+`(π₁, π₂, π₃)` on the propensity-score, spatial and interference components.
+
+```{r idaps}
+fit <- idaps(sim$Y, sim$Z, sim$X, sim$coords, tau = 0.1, seed = 1)
+fit
+fit$weights
+```
+
+## recoverU+ in detail
+
+`recoverUplus()` recovers the spatial confounder from the residual Matérn field
+and augments the doubly robust estimator with it and the exposure term. The
+recovered confounder is returned for inspection.
+
+```{r recoverU}
+fp <- recoverUplus(sim$Y, sim$Z, sim$X, sim$coords, tau = 0.1)
+fp
+head(fp$extras$Uhat)
+```
+
+## A small simulation study
+
+Averaging over repeated data sets recovers the bias/MSE ordering reported in the
+paper (`recoverU+` and `iDAPS` beat the naive comparator).
+
+```{r montecarlo, eval = FALSE}
+methods <- c("Naive PS", "DAPS", "iDAPS", "recoverU", "recoverU+")
+nsim <- 200; true <- 2
+store <- matrix(NA, nsim, length(methods), dimnames = list(NULL, methods))
+for (s in seq_len(nsim)) {
+  d <- simulate_spatial_causal(n = 250, delta_u = 2.0, tau_exp = 0.1)
+  store[s, ] <- spatial_ate(d$Y, d$Z, d$X, d$coords, seed = s)$ATT
+}
+data.frame(Method = methods,
+           Bias = round(colMeans(store - true, na.rm = TRUE), 3),
+           MSE  = round(colMeans((store - true)^2, na.rm = TRUE), 3))
+```

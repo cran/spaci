@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Estimating causal effects under spatial confounding and interference</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Estimating causal effects under spatial
+confounding and interference</h1>
+
+
+
+<div id="the-problem" class="section level2">
+<h2>The problem</h2>
+<p>In spatial observational studies two phenomena often occur
+together:</p>
+<ul>
+<li><strong>Spatial confounding (SC):</strong> an <em>unmeasured</em>
+spatial variable <code>U(s)</code> drives both the treatment
+<code>Z</code> and the outcome <code>Y</code>, so conditioning on the
+measured covariates <code>X</code> alone does not close the backdoor
+path.</li>
+<li><strong>Spatial interference (SI):</strong> a unit’s outcome depends
+on its <em>neighbours’</em> treatment, summarised through a
+neighbourhood-exposure mapping <code>E_i = Σ_j G_ij Z_j</code>.</li>
+</ul>
+<p>Methods that address only one of the two are biased when both are
+present. This package implements two estimators that handle them
+<strong>simultaneously</strong>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(spaci)</span></code></pre></div>
+</div>
+<div id="simulate-data" class="section level2">
+<h2>Simulate data</h2>
+<p><code>simulate_spatial_causal()</code> draws data in which
+<code>U(s)</code> is an exponential Gaussian random field, treatment
+depends on <code>U(s)</code>, and the outcome depends on both
+<code>U(s)</code> and neighbourhood exposure. The true ATT is 2.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">simulate_spatial_causal</span>(<span class="at">n =</span> <span class="dv">250</span>, <span class="at">delta_u =</span> <span class="fl">2.0</span>, <span class="at">tau_exp =</span> <span class="fl">0.1</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">str</span>(sim, <span class="at">max.level =</span> <span class="dv">1</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; List of 7</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt;  $ Y       : num [1:250] 4.86 7.78 4.33 5.85 7.15 ...</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt;  $ Z       : int [1:250] 0 1 1 1 1 0 0 0 1 0 ...</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt;  $ X       : num [1:250, 1:2] 0.1362 0.4072 -0.0697 -0.2477 0.6956 ...</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt;  $ coords  : num [1:250, 1:2] 0.266 0.372 0.573 0.908 0.202 ...</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt;  $ E       : num [1:250] 0.541 0.603 0.448 0.531 0.803 ...</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt;  $ U       : num [1:250] -0.551 0.901 0.25 0.225 1.703 ...</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt;  $ true_att: num 2</span></span></code></pre></div>
+</div>
+<div id="estimate-the-att-with-every-method" class="section level2">
+<h2>Estimate the ATT with every method</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">spatial_ate</span>(sim<span class="sc">$</span>Y, sim<span class="sc">$</span>Z, sim<span class="sc">$</span>X, sim<span class="sc">$</span>coords, <span class="at">tau =</span> <span class="fl">0.1</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>res</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;      Method      ATT        SE    Lower    Upper</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; 1  Naive PS 2.758583 0.1757337 2.414151 3.103015</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; 2      DAPS 2.611254 0.1795707 2.259302 2.963206</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; 3     iDAPS 2.289499 0.2152935 1.867531 2.711467</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; 4  recoverU 2.664288 0.1607680 2.349189 2.979388</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; 5 recoverU+ 2.251783 0.1285335 1.999862 2.503704</span></span></code></pre></div>
+<p>The naive propensity score ignores both SC and SI and is the most
+biased; <code>iDAPS</code> and <code>recoverU+</code> adjust for both
+and sit closest to the true ATT of 2.</p>
+</div>
+<div id="visualising-the-comparison" class="section level2">
+<h2>Visualising the comparison</h2>
+<p><code>plot_ate()</code> draws a forest plot of the estimates and
+their confidence intervals, with a reference line at zero and
+(optionally) the true effect.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">plot_ate</span>(res, <span class="at">true_att =</span> sim<span class="sc">$</span>true_att)</span></code></pre></div>
+<p><img role="img" aria-label="Forest plot of ATT estimates by method" src="data:image/png;base64,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" alt="Forest plot of ATT estimates by method" /></p>
+</div>
+<div id="idaps-in-detail" class="section level2">
+<h2>iDAPS in detail</h2>
+<p><code>idaps()</code> matches on the composite distance and reports
+the data-driven weights <code>(π₁, π₂, π₃)</code> on the
+propensity-score, spatial and interference components.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">idaps</span>(sim<span class="sc">$</span>Y, sim<span class="sc">$</span>Z, sim<span class="sc">$</span>X, sim<span class="sc">$</span>coords, <span class="at">tau =</span> <span class="fl">0.1</span>, <span class="at">seed =</span> <span class="dv">1</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>fit</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; Spatial causal effect estimate (iDAPS)</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; Estimand: average treatment effect on the treated (ATT)</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt;   ATT   = 2.289 </span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt;   SE    = 0.2153 </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt;   95% CI = [1.868, 2.711]</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt;   Tuning weights: pi1=0.1, pi2=0.3, pi3=0.6 </span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt;   Matched treated units: 88 (dropped: 50 )</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>fit<span class="sc">$</span>weights</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; pi1 pi2 pi3 </span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; 0.1 0.3 0.6</span></span></code></pre></div>
+</div>
+<div id="recoveru-in-detail" class="section level2">
+<h2>recoverU+ in detail</h2>
+<p><code>recoverUplus()</code> recovers the spatial confounder from the
+residual Matérn field and augments the doubly robust estimator with it
+and the exposure term. The recovered confounder is returned for
+inspection.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">recoverUplus</span>(sim<span class="sc">$</span>Y, sim<span class="sc">$</span>Z, sim<span class="sc">$</span>X, sim<span class="sc">$</span>coords, <span class="at">tau =</span> <span class="fl">0.1</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>fp</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; Spatial causal effect estimate (recoverU+)</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; Estimand: average treatment effect on the treated (ATT)</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;   ATT   = 2.252 </span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;   SE    = 0.1285 </span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;   95% CI = [2, 2.504]</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">head</span>(fp<span class="sc">$</span>extras<span class="sc">$</span>Uhat)</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt; [1]  8.360562e-07  1.021347e-06 -5.595718e-07 -2.916725e-08  5.322667e-07</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; [6] -1.135186e-06</span></span></code></pre></div>
+</div>
+<div id="a-small-simulation-study" class="section level2">
+<h2>A small simulation study</h2>
+<p>Averaging over repeated data sets recovers the bias/MSE ordering
+reported in the paper (<code>recoverU+</code> and <code>iDAPS</code>
+beat the naive comparator).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>methods <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Naive PS&quot;</span>, <span class="st">&quot;DAPS&quot;</span>, <span class="st">&quot;iDAPS&quot;</span>, <span class="st">&quot;recoverU&quot;</span>, <span class="st">&quot;recoverU+&quot;</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>nsim <span class="ot">&lt;-</span> <span class="dv">200</span>; true <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>store <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, nsim, <span class="fu">length</span>(methods), <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, methods))</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="cf">for</span> (s <span class="cf">in</span> <span class="fu">seq_len</span>(nsim)) {</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">simulate_spatial_causal</span>(<span class="at">n =</span> <span class="dv">250</span>, <span class="at">delta_u =</span> <span class="fl">2.0</span>, <span class="at">tau_exp =</span> <span class="fl">0.1</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  store[s, ] <span class="ot">&lt;-</span> <span class="fu">spatial_ate</span>(d<span class="sc">$</span>Y, d<span class="sc">$</span>Z, d<span class="sc">$</span>X, d<span class="sc">$</span>coords, <span class="at">seed =</span> s)<span class="sc">$</span>ATT</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>}</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">Method =</span> methods,</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>           <span class="at">Bias =</span> <span class="fu">round</span>(<span class="fu">colMeans</span>(store <span class="sc">-</span> true, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">3</span>),</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>           <span class="at">MSE  =</span> <span class="fu">round</span>(<span class="fu">colMeans</span>((store <span class="sc">-</span> true)<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="dv">3</span>))</span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
