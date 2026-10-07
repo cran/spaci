@@ -18,15 +18,17 @@
 #' @param include_E_in_PS Logical; include `E` in the PS and control-outcome
 #'   models (recoverU+ when `TRUE`, recoverU when `FALSE`).
 #' @param matern_method Matern estimation engine, `"mle"` or `"geoR"`.
-#' @return A list with `att`, `se` and `Uhat` (the recovered confounder).
+#' @return A list with `att`, `se`, `Uhat` (the recovered confounder) and `ps`
+#'   (fitted propensity scores from the augmented model).
 #' @keywords internal
 #' @noRd
 recoverU_core <- function(Y, Z, X, E, coords, d_space_raw,
                           include_E_in_PS = FALSE,
-                          matern_method = "mle") {
+                          matern_method = "mle", matern_nu = 0.5) {
   n_obs <- length(Y)
   n1 <- sum(Z == 1)
-  fail <- list(att = NA_real_, se = NA_real_, Uhat = rep(NA_real_, n_obs))
+  fail <- list(att = NA_real_, se = NA_real_, Uhat = rep(NA_real_, n_obs),
+              ps = rep(NA_real_, n_obs))
   if (n1 < 2 || sum(Z == 0) < 2) return(fail)
 
   Xdf <- as.data.frame(X)
@@ -42,7 +44,8 @@ recoverU_core <- function(Y, Z, X, E, coords, d_space_raw,
   resid_initial <- stats::residuals(fit_initial)
 
   ## --- recover the spatial confounder via GLS (Eq. 2.9) ---------------------
-  par_hat <- estimate_matern_params(resid_initial, coords, method = matern_method)
+  par_hat <- estimate_matern_params(resid_initial, coords, method = matern_method,
+                                    nu = matern_nu)
   Sigma_U <- matern_cov_matrix(d_space_raw, par_hat$sigma2, par_hat$theta,
                                par_hat$nu)
   sigma2_eps_hat <- max(par_hat$sigma2_eps, 1e-8)
@@ -97,7 +100,7 @@ recoverU_core <- function(Y, Z, X, E, coords, d_space_raw,
   infl <- psi / pi_hat - att_hat
   se_hat <- stats::sd(infl, na.rm = TRUE) / sqrt(n_obs)
 
-  list(att = att_hat, se = se_hat, Uhat = Uhat)
+  list(att = att_hat, se = se_hat, Uhat = Uhat, infl = infl, ps = ehat)
 }
 
 #' recoverU: doubly robust ATT with a recovered spatial confounder
@@ -116,6 +119,9 @@ recoverU_core <- function(Y, Z, X, E, coords, d_space_raw,
 #' @param normalize Logical; row-normalise the exposure kernel (default `TRUE`).
 #' @param matern_method Matern estimation engine: `"mle"` (default, no external
 #'   dependency) or `"geoR"` (reproduces the reference analysis).
+#' @param matern_nu Fixed Matern smoothness for the `"mle"` engine (default
+#'   `0.5`, an exponential covariance, which is numerically stable); pass `NULL`
+#'   to estimate the smoothness freely. Ignored by the `"geoR"` engine.
 #' @param level Confidence level for the reported interval.
 #'
 #' @return An `idaps_fit` object.
@@ -124,7 +130,8 @@ recoverU_core <- function(Y, Z, X, E, coords, d_space_raw,
 #' recoverU(sim$Y, sim$Z, sim$X, sim$coords)
 #' @export
 recoverU <- function(Y, Z, X, coords, tau = 0.1, normalize = TRUE,
-                     matern_method = c("mle", "geoR"), level = 0.95) {
+                     matern_method = c("mle", "geoR"), matern_nu = 0.5,
+                     level = 0.95) {
   matern_method <- match.arg(matern_method)
   check_scalars(tau = tau, level = level)
   d <- validate_inputs(Y, Z, X, coords, require_X = TRUE, require_coords = TRUE)
@@ -132,9 +139,11 @@ recoverU <- function(Y, Z, X, coords, tau = 0.1, normalize = TRUE,
   d_space_raw <- as.matrix(stats::dist(d$coords))
 
   res <- recoverU_core(d$Y, d$Z, d$X, ex$E, d$coords, d_space_raw,
-                       include_E_in_PS = FALSE, matern_method = matern_method)
+                       include_E_in_PS = FALSE, matern_method = matern_method,
+                       matern_nu = matern_nu)
   new_idaps_fit("recoverU", res$att, res$se,
-                extras = list(E = ex$E, Uhat = res$Uhat), level = level)
+                extras = list(E = ex$E, Uhat = res$Uhat, infl = res$infl,
+                              ps = res$ps, coords = d$coords), level = level)
 }
 
 #' recoverU+: doubly robust ATT under spatial confounding and interference
@@ -154,7 +163,8 @@ recoverU <- function(Y, Z, X, coords, tau = 0.1, normalize = TRUE,
 #' recoverUplus(sim$Y, sim$Z, sim$X, sim$coords)
 #' @export
 recoverUplus <- function(Y, Z, X, coords, tau = 0.1, normalize = TRUE,
-                         matern_method = c("mle", "geoR"), level = 0.95) {
+                         matern_method = c("mle", "geoR"), matern_nu = 0.5,
+                         level = 0.95) {
   matern_method <- match.arg(matern_method)
   check_scalars(tau = tau, level = level)
   d <- validate_inputs(Y, Z, X, coords, require_X = TRUE, require_coords = TRUE)
@@ -162,7 +172,9 @@ recoverUplus <- function(Y, Z, X, coords, tau = 0.1, normalize = TRUE,
   d_space_raw <- as.matrix(stats::dist(d$coords))
 
   res <- recoverU_core(d$Y, d$Z, d$X, ex$E, d$coords, d_space_raw,
-                       include_E_in_PS = TRUE, matern_method = matern_method)
+                       include_E_in_PS = TRUE, matern_method = matern_method,
+                       matern_nu = matern_nu)
   new_idaps_fit("recoverU+", res$att, res$se,
-                extras = list(E = ex$E, Uhat = res$Uhat), level = level)
+                extras = list(E = ex$E, Uhat = res$Uhat, infl = res$infl,
+                              ps = res$ps, coords = d$coords), level = level)
 }

@@ -8,6 +8,10 @@
 #' @param Z Binary treatment vector (0/1).
 #' @param X Covariate matrix or data frame.
 #' @param caliper Maximum acceptable matching distance (default `0.25`).
+#' @param match_method Matching algorithm: `"greedy"` (default) matches treated
+#'   units in random order to their nearest available control (depends on
+#'   `seed`); `"optimal"` solves the 1:1 assignment minimising total distance
+#'   (deterministic, needs the `clue` package).
 #' @param seed Optional integer seed for the (randomised) matching order.
 #' @param level Confidence level for the reported interval.
 #'
@@ -16,7 +20,9 @@
 #' sim <- simulate_spatial_causal(n = 50, seed = 1)
 #' naive_ps(sim$Y, sim$Z, sim$X)
 #' @export
-naive_ps <- function(Y, Z, X, caliper = 0.25, seed = NULL, level = 0.95) {
+naive_ps <- function(Y, Z, X, caliper = 0.25, match_method = c("greedy", "optimal"),
+                     seed = NULL, level = 0.95) {
+  match_method <- match.arg(match_method)
   check_scalars(caliper = caliper, level = level)
   if (!is.null(seed)) {
     old <- .save_seed(); on.exit(.restore_seed(old), add = TRUE); set.seed(seed)
@@ -27,7 +33,7 @@ naive_ps <- function(Y, Z, X, caliper = 0.25, seed = NULL, level = 0.95) {
   D_ps <- range01(abs(outer(ps, ps, "-")))
   diag(D_ps) <- 0
 
-  fit <- match_att(D_ps, d$Y, d$Z, caliper)
+  fit <- match_att(D_ps, d$Y, d$Z, caliper, method = match_method)
   new_idaps_fit("Naive PS", fit$att, fit$se, fit$n_match, fit$n_drop,
                 extras = list(ps = ps, pairs = fit$pairs), level = level)
 }
@@ -52,7 +58,9 @@ naive_ps <- function(Y, Z, X, caliper = 0.25, seed = NULL, level = 0.95) {
 #' daps(sim$Y, sim$Z, sim$X, sim$coords)
 #' @export
 daps <- function(Y, Z, X, coords, caliper = 0.25, alpha_grid_step = 0.1,
-                 seed = NULL, level = 0.95) {
+                 match_method = c("greedy", "optimal"), seed = NULL,
+                 level = 0.95) {
+  match_method <- match.arg(match_method)
   check_scalars(caliper = caliper, level = level, grid_step = alpha_grid_step)
   if (!is.null(seed)) {
     old <- .save_seed(); on.exit(.restore_seed(old), add = TRUE); set.seed(seed)
@@ -67,7 +75,7 @@ daps <- function(Y, Z, X, coords, caliper = 0.25, alpha_grid_step = 0.1,
   for (alpha in grid_vals) {
     D <- alpha * comp$D_ps + (1 - alpha) * comp$d_space
     diag(D) <- 0
-    fit <- match_att(D, d$Y, d$Z, caliper)
+    fit <- match_att(D, d$Y, d$Z, caliper, method = match_method)
     if (is.na(fit$att) || is.null(fit$pairs) || nrow(fit$pairs) < 2) next
     B <- covariate_balance_score(fit$pairs, d$X)
     if (is.finite(B) && B < best_B) {
@@ -109,8 +117,10 @@ daps <- function(Y, Z, X, coords, caliper = 0.25, alpha_grid_step = 0.1,
 #' idaps(sim$Y, sim$Z, sim$X, sim$coords, tau = 0.1)
 #' @export
 idaps <- function(Y, Z, X, coords, tau = 0.1, caliper = 0.25,
-                  pi_grid_step = 0.1, normalize = TRUE, seed = NULL,
+                  pi_grid_step = 0.1, normalize = TRUE,
+                  match_method = c("greedy", "optimal"), seed = NULL,
                   level = 0.95) {
+  match_method <- match.arg(match_method)
   check_scalars(caliper = caliper, tau = tau, level = level,
                 grid_step = pi_grid_step)
   if (!isTRUE(normalize) && !isFALSE(normalize)) {
@@ -135,7 +145,7 @@ idaps <- function(Y, Z, X, coords, tau = 0.1, caliper = 0.25,
 
       D <- pi1 * comp$D_ps + pi2 * comp$d_space + pi3 * comp$d_exp
       diag(D) <- 0
-      fit <- match_att(D, d$Y, d$Z, caliper)
+      fit <- match_att(D, d$Y, d$Z, caliper, method = match_method)
       if (is.na(fit$att) || is.null(fit$pairs) || nrow(fit$pairs) < 2) next
       B <- balance_score_idaps(fit$pairs, d$X, E, comp$d_space_raw)
       if (is.finite(B) && B < best_B) {

@@ -4,7 +4,15 @@
 \alias{naive_ps}
 \title{Naive propensity-score matching ATT}
 \usage{
-naive_ps(Y, Z, X, caliper = 0.25, seed = NULL, level = 0.95)
+naive_ps(
+  Y,
+  Z,
+  X,
+  caliper = 0.25,
+  match_method = c("greedy", "optimal"),
+  seed = NULL,
+  level = 0.95
+)
 }
 \arguments{
 \item{Y}{Numeric outcome vector.}
@@ -14,6 +22,11 @@ naive_ps(Y, Z, X, caliper = 0.25, seed = NULL, level = 0.95)
 \item{X}{Covariate matrix or data frame.}
 
 \item{caliper}{Maximum acceptable matching distance (default \code{0.25}).}
+
+\item{match_method}{Matching algorithm: \code{"greedy"} (default) matches treated
+units in random order to their nearest available control (depends on
+\code{seed}); \code{"optimal"} solves the 1:1 assignment minimising total distance
+(deterministic, needs the \code{clue} package).}
 
 \item{seed}{Optional integer seed for the (randomised) matching order.}
 

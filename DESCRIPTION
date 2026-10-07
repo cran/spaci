@@ -1,7 +1,7 @@
 Package: spaci
 Title: Causal Effect Estimation Under Spatial Confounding and
         Interference
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: c(
     person("Isqeel", "Ogunsola", role = c("aut", "cre"),
            email = "isqeel.ogunsola@postgrad.manchester.ac.uk"),
@@ -15,23 +15,25 @@ Description: Implements the distance-adjusted propensity score with interference
     neighbourhood-exposure distance. recoverU+ is a doubly robust estimator that
     augments the propensity-score and control-outcome models with a partially
     recovered spatial confounder and a neighbourhood-exposure term. The package
-    also provides the naive propensity score, DAPS and recoverU comparators, and
-    a simulator for the spatial confounding/interference data-generating process.
+    also provides the naive propensity score, DAPS and recoverU comparators,
+    a simulator for the spatial confounding/interference data-generating process
+    and  spatial inference tools.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Imports: stats
-Suggests: geoR, ggplot2, readxl, testthat (>= 3.0.0), knitr, rmarkdown
+Suggests: clue, geoR, ggplot2, readxl, testthat (>= 3.0.0), knitr,
+        rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/Ogunsolaia/spaci
 BugReports: https://github.com/Ogunsolaia/spaci/issues
 Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-09-11 12:10:11 UTC; b71225io
+Packaged: 2026-10-07 12:45:07 UTC; b71225io
 Author: Isqeel Ogunsola [aut, cre],
   Olatunji Johnson [aut],
   Thomas House [aut]
 Maintainer: Isqeel Ogunsola <isqeel.ogunsola@postgrad.manchester.ac.uk>
 Repository: CRAN
-Date/Publication: 2026-09-21 21:30:02 UTC
+Date/Publication: 2026-10-07 13:20:02 UTC

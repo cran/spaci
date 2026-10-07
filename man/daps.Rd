@@ -11,6 +11,7 @@ daps(
   coords,
   caliper = 0.25,
   alpha_grid_step = 0.1,
+  match_method = c("greedy", "optimal"),
   seed = NULL,
   level = 0.95
 )
@@ -27,6 +28,11 @@ daps(
 \item{caliper}{Maximum acceptable matching distance (default \code{0.25}).}
 
 \item{alpha_grid_step}{Grid step for the \eqn{\alpha} search over \verb{[0, 1]}.}
+
+\item{match_method}{Matching algorithm: \code{"greedy"} (default) matches treated
+units in random order to their nearest available control (depends on
+\code{seed}); \code{"optimal"} solves the 1:1 assignment minimising total distance
+(deterministic, needs the \code{clue} package).}
 
 \item{seed}{Optional integer seed for the (randomised) matching order.}
 

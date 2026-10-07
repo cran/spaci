@@ -12,6 +12,7 @@ recoverU(
   tau = 0.1,
   normalize = TRUE,
   matern_method = c("mle", "geoR"),
+  matern_nu = 0.5,
   level = 0.95
 )
 }
@@ -31,6 +32,10 @@ the initial outcome model (default \code{0.1}).}
 
 \item{matern_method}{Matern estimation engine: \code{"mle"} (default, no external
 dependency) or \code{"geoR"} (reproduces the reference analysis).}
+
+\item{matern_nu}{Fixed Matern smoothness for the \code{"mle"} engine (default
+\code{0.5}, an exponential covariance, which is numerically stable); pass \code{NULL}
+to estimate the smoothness freely. Ignored by the \code{"geoR"} engine.}
 
 \item{level}{Confidence level for the reported interval.}
 }

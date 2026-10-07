@@ -13,6 +13,7 @@ idaps(
   caliper = 0.25,
   pi_grid_step = 0.1,
   normalize = TRUE,
+  match_method = c("greedy", "optimal"),
   seed = NULL,
   level = 0.95
 )
@@ -34,6 +35,11 @@ idaps(
 \item{pi_grid_step}{Grid step for the weight search over the simplex.}
 
 \item{normalize}{Logical; row-normalise the exposure kernel (default \code{TRUE}).}
+
+\item{match_method}{Matching algorithm: \code{"greedy"} (default) matches treated
+units in random order to their nearest available control (depends on
+\code{seed}); \code{"optimal"} solves the 1:1 assignment minimising total distance
+(deterministic, needs the \code{clue} package).}
 
 \item{seed}{Optional integer seed for the (randomised) matching order.}
 

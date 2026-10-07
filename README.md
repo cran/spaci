@@ -18,7 +18,7 @@ where existing methods that address only one of the two are biased:
   score, not tuned by hand. Setting `π₃ = 0` recovers DAPS and `π₂ = π₃ = 0`
   recovers naive PS.
 - **recoverU+** (`recoverUplus()`) — a **doubly robust** estimator whose
-  propensity-score and control-outcome models are augmented with a *partially
+  propensity score and control outcome models are augmented with a *partially
   recovered spatial confounder* `U_R(s)` (recovered from the residual Matérn
   field by GLS) **and** a neighbourhood-exposure term, so that SC and SI are
   adjusted for simultaneously.
@@ -27,11 +27,20 @@ The naive PS (`naive_ps()`), DAPS (`daps()`) and recoverU (`recoverU()`)
 comparators, a data simulator (`simulate_spatial_causal()`) and an all-methods
 wrapper (`spatial_ate()`) are also provided.
 
-This package accompanies the report *"Unified methods for causal effect
-estimation: mitigating spatial confounding and interference concomitantly"*
-(Ogunsola, Johnson & House).
+This package accompanies the report *"A unified framework for estimating direct causal effect
+under spatial confounding and interference, with the R package spaci"*
+(Ogunsola, I. and Johnson, O. 2026).
 
 ## Installation
+
+The released version is on CRAN:
+
+```r
+install.packages("spaci")
+```
+
+The development version, which adds the spatial inference tools (`vcov_hac()`,
+`boot_spatial()`, `rand_test()`) and `bias_bound()`, can be installed from GitHub:
 
 ```r
 # install.packages("devtools")
@@ -97,7 +106,7 @@ idaps(Y, Z, X, coords, tau = 0.1, caliper = 0.25, seed = 1)
 recoverUplus(Y, Z, X, coords, tau = 0.1)
 
 # all five methods side by side, then plot
-res <- spatial_ate(Y, Z, X, coords, tau = 0.1, seed = 1)
+res <- spatial_ate(Y, Z, X, coords, tau = 0.1, seed = s)
 plot_ate(res)
 ```
 

@@ -17,9 +17,15 @@
 #' @return A list with `att`, `se`, the number of matched (`n_match`) and
 #'   dropped (`n_drop`) treated units, and the matched `pairs` (a two-column
 #'   matrix of treated/control row indices).
+#' @param method Matching algorithm: `"greedy"` (default) processes treated
+#'   units in random order, matching each to its nearest available control
+#'   (depends on the RNG); `"optimal"` solves the 1:1 assignment minimising total
+#'   distance via [clue::solve_LSAP()] (deterministic, requires the `clue`
+#'   package).
 #' @keywords internal
 #' @noRd
-match_att <- function(Dmat, Y, Z, caliper = Inf) {
+match_att <- function(Dmat, Y, Z, caliper = Inf, method = c("greedy", "optimal")) {
+  method <- match.arg(method)
   treated <- which(Z == 1)
   controls <- which(Z == 0)
 
@@ -32,37 +38,73 @@ match_att <- function(Dmat, Y, Z, caliper = Inf) {
     return(empty_fit())
   }
 
-  available_controls <- controls
-  diffs <- numeric(0)
-  pairs <- matrix(integer(0), ncol = 2)
+  pairs <- if (method == "optimal") {
+    match_pairs_optimal(Dmat, treated, controls, caliper)
+  } else {
+    match_pairs_greedy(Dmat, treated, controls, caliper)
+  }
 
+  if (is.null(pairs) || nrow(pairs) < 2) {
+    return(empty_fit(n_match = if (is.null(pairs)) 0 else nrow(pairs),
+                     n_drop = length(treated) -
+                       (if (is.null(pairs)) 0 else nrow(pairs)),
+                     pairs = pairs))
+  }
+
+  diffs <- Y[pairs[, 1]] - Y[pairs[, 2]]
+  list(att = mean(diffs), se = stats::sd(diffs) / sqrt(length(diffs)),
+       n_match = nrow(pairs), n_drop = length(treated) - nrow(pairs),
+       pairs = pairs)
+}
+
+#' Greedy 1:1 nearest-neighbour matching (random treated order)
+#' @keywords internal
+#' @noRd
+match_pairs_greedy <- function(Dmat, treated, controls, caliper) {
+  available_controls <- controls
+  pairs <- matrix(integer(0), ncol = 2)
   treated_order <- sample(treated, length(treated), replace = FALSE)
 
   for (i in treated_order) {
     if (length(available_controls) == 0) break
-
     dvec <- Dmat[i, available_controls]
     if (all(!is.finite(dvec))) next
-
     jpos <- which.min(dvec)
     dmin <- dvec[jpos]
     if (!is.finite(dmin) || dmin > caliper) next
-
     j <- available_controls[jpos]
-    diffs <- c(diffs, Y[i] - Y[j])
     pairs <- rbind(pairs, c(i, j))
     available_controls <- setdiff(available_controls, j)
   }
+  pairs
+}
 
-  n_match <- length(diffs)
-  n_drop <- length(treated) - n_match
-
-  if (n_match < 2) {
-    return(empty_fit(n_match = n_match, n_drop = n_drop, pairs = pairs))
+#' Optimal 1:1 assignment matching (deterministic, via clue::solve_LSAP)
+#' @keywords internal
+#' @noRd
+match_pairs_optimal <- function(Dmat, treated, controls, caliper) {
+  if (!requireNamespace("clue", quietly = TRUE)) {
+    stop("`match_method = \"optimal\"` requires the 'clue' package.", call. = FALSE)
   }
+  ## assign the smaller group to the larger so solve_LSAP has nrow <= ncol
+  swap <- length(treated) > length(controls)
+  rows <- if (swap) controls else treated
+  cols <- if (swap) treated else controls
 
-  list(att = mean(diffs), se = stats::sd(diffs) / sqrt(n_match),
-       n_match = n_match, n_drop = n_drop, pairs = pairs)
+  cost <- Dmat[rows, cols, drop = FALSE]
+  big <- max(cost[is.finite(cost)], na.rm = TRUE) * length(cost) + 1
+  cost[!is.finite(cost)] <- big
+
+  assign <- tryCatch(as.integer(clue::solve_LSAP(cost)),
+                     error = function(e) NULL)
+  if (is.null(assign)) return(matrix(integer(0), ncol = 2))
+
+  ri <- seq_along(rows)
+  d_sel <- cost[cbind(ri, assign)]
+  keep <- is.finite(d_sel) & d_sel <= caliper & d_sel < big
+  t_idx <- if (swap) cols[assign[keep]] else rows[ri[keep]]
+  c_idx <- if (swap) rows[ri[keep]] else cols[assign[keep]]
+  cbind(t_idx, c_idx)
 }
 
 #' Absolute standardised mean difference in covariates over matched pairs

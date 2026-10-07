@@ -38,11 +38,15 @@ matern_cov_matrix <- function(dmat, sigma2, theta, nu) {
 #'   finite penalty on numerical failure.
 #' @keywords internal
 #' @noRd
-matern_negloglik <- function(par, r, dmat) {
+matern_negloglik <- function(par, r, dmat, nu = NULL) {
   sigma2 <- exp(par[1])
   theta <- exp(par[2])
-  nu <- exp(par[3])
-  nugget <- exp(par[4])
+  if (is.null(nu)) {
+    nu <- exp(par[3])
+    nugget <- exp(par[4])
+  } else {
+    nugget <- exp(par[3])
+  }
 
   n <- length(r)
   C <- matern_cov_matrix(dmat, sigma2, theta, nu) + nugget * diag(n)
@@ -74,21 +78,31 @@ matern_negloglik <- function(par, r, dmat) {
 #' installed. On any numerical failure a moment-based fallback is returned so
 #' that downstream estimation can proceed.
 #'
+#' By default the smoothness is **fixed** at `nu = 0.5` (an exponential
+#' covariance). The free four-parameter Matern MLE is poorly identified on weak
+#' residual fields and can send the smoothness estimate to a numerical boundary
+#' (observed `nu` in the hundreds); fixing `nu` removes this instability and
+#' matches the common exponential-field assumption. Pass `nu = NULL` to estimate
+#' the smoothness freely (legacy behaviour).
+#'
 #' @param resid Numeric residual vector.
 #' @param coords Two-column matrix of coordinates.
 #' @param method Estimation engine, `"mle"` (default) or `"geoR"`.
+#' @param nu Fixed Matern smoothness (default `0.5`, exponential); `NULL` to
+#'   estimate it. Ignored by the `"geoR"` engine, which always estimates it.
 #' @return A list with `sigma2`, `theta`, `nu` and `sigma2_eps` (nugget).
 #' @keywords internal
 #' @noRd
-estimate_matern_params <- function(resid, coords, method = c("mle", "geoR")) {
+estimate_matern_params <- function(resid, coords, method = c("mle", "geoR"),
+                                   nu = 0.5) {
   method <- match.arg(method)
   resid <- as.numeric(resid)
 
   vres <- stats::var(resid, na.rm = TRUE)
   if (!is.finite(vres) || vres <= 0) vres <- 1
 
-  fallback <- list(sigma2 = 0.7 * vres, theta = 0.2, nu = 0.5,
-                   sigma2_eps = 0.3 * vres)
+  fallback <- list(sigma2 = 0.7 * vres, theta = 0.2,
+                   nu = if (is.null(nu)) 0.5 else nu, sigma2_eps = 0.3 * vres)
 
   if (method == "geoR") {
     if (!requireNamespace("geoR", quietly = TRUE)) {
@@ -113,20 +127,32 @@ estimate_matern_params <- function(resid, coords, method = c("mle", "geoR")) {
   }
 
   dmat <- as.matrix(stats::dist(coords))
-  start <- log(c(sigma2 = 0.7 * vres, theta = 0.2, nu = 0.5,
-                 nugget = 0.3 * vres))
 
-  fit <- tryCatch(
-    stats::optim(start, matern_negloglik, r = resid, dmat = dmat,
-                 method = "Nelder-Mead",
-                 control = list(maxit = 500, reltol = 1e-8)),
-    error = function(e) NULL)
-
-  if (is.null(fit) || fit$convergence > 1) return(fallback)
-
-  pars <- exp(fit$par)
-  out <- list(sigma2 = pars[[1]], theta = pars[[2]], nu = pars[[3]],
-              sigma2_eps = pars[[4]])
+  if (is.null(nu)) {
+    ## legacy: estimate smoothness too (four parameters)
+    start <- log(c(0.7 * vres, 0.2, 0.5, 0.3 * vres))
+    fit <- tryCatch(
+      stats::optim(start, matern_negloglik, r = resid, dmat = dmat, nu = NULL,
+                   method = "Nelder-Mead",
+                   control = list(maxit = 500, reltol = 1e-8)),
+      error = function(e) NULL)
+    if (is.null(fit) || fit$convergence > 1) return(fallback)
+    pars <- exp(fit$par)
+    out <- list(sigma2 = pars[[1]], theta = pars[[2]], nu = pars[[3]],
+                sigma2_eps = pars[[4]])
+  } else {
+    ## default: smoothness fixed at nu (three parameters, stable)
+    start <- log(c(0.7 * vres, 0.2, 0.3 * vres))
+    fit <- tryCatch(
+      stats::optim(start, matern_negloglik, r = resid, dmat = dmat, nu = nu,
+                   method = "Nelder-Mead",
+                   control = list(maxit = 500, reltol = 1e-8)),
+      error = function(e) NULL)
+    if (is.null(fit) || fit$convergence > 1) return(fallback)
+    pars <- exp(fit$par)
+    out <- list(sigma2 = pars[[1]], theta = pars[[2]], nu = nu,
+                sigma2_eps = pars[[3]])
+  }
   if (!all(vapply(out, is.finite, logical(1)))) return(fallback)
   out
 }
